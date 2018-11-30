@@ -1,0 +1,3 @@
+﻿prj,code,path
+loanDW,BS03001,$/loanDW
+NameList,BS10007,$/NameList/PD/DW_SQL
