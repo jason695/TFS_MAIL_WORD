@@ -6,10 +6,22 @@ Public Class Form1
     Dim dt_PRJ As DataTable
 
     Private Sub Form1_Load(sender As System.Object, e As System.EventArgs) Handles MyBase.Load
+        ini()
+        Button1_Click(sender, e)
+    End Sub
+
+    ''' <summary>
+    ''' 下拉選單初始化
+    ''' </summary>
+    ''' <remarks></remarks>
+    Private Sub ini()
         Dim itm As String = ""
         Dim i As Boolean = False
 
-        'cmbPROJ
+        'cmbPROJ 專案
+        cmbPROJ.Items.Clear()
+        cmbPROJ.Text = ""
+
         Dim sr As StreamReader = New StreamReader(Path + "\project.txt", System.Text.Encoding.Default)
         While sr.Peek() > -1
             itm = sr.ReadLine().Split(",")(0)
@@ -22,10 +34,12 @@ Public Class Form1
         End While
         sr.Close()
 
-        'CmbPROJ
         dt_PRJ = TxtConvertToDataTable(Path + "\project.txt", "tmp", ",")
 
-        'ComboBox1
+        'ComboBox1 換版單清單
+        ComboBox1.Items.Clear()
+        ComboBox1.Text = ""
+
         Dim str As String() = Directory.GetFileSystemEntries(Path, "*_SET.txt")
         Array.Reverse(str)
 
@@ -33,50 +47,16 @@ Public Class Form1
             ComboBox1.Items.Add(item.Replace(Path + "\", "").Replace("_SET.txt", ""))
         Next
 
-        Button1_Click(sender, e)
+        '其他
+        cmbSASD.Items.Clear()
+        cmbOK.Items.Clear()
+        cmbUSER.Items.Clear()
+
+        cmbSASD.Text = ""
+        cmbOK.Text = ""
+        cmbUSER.Text = ""
+
     End Sub
-
-    Public Function TxtConvertToDataTable(ByVal File As String, ByVal TableName As String, ByVal delimiter As String) As DataTable
-        Dim dt As DataTable = New DataTable()
-        Dim ds As DataSet = New DataSet()
-        Dim s As StreamReader = New StreamReader(File, System.Text.Encoding.[Default])
-        Dim columns As String() = s.ReadLine().Split(delimiter.ToCharArray())
-        ds.Tables.Add(TableName)
-
-        For Each col As String In columns
-            Dim added As Boolean = False
-            Dim [next] As String = ""
-            Dim i As Integer = 0
-
-            While Not added
-                Dim columnname As String = col & [next]
-                columnname = columnname.Replace("#", "")
-                columnname = columnname.Replace("'", "")
-                columnname = columnname.Replace("&", "")
-
-                If Not ds.Tables(TableName).Columns.Contains(columnname) Then
-                    ds.Tables(TableName).Columns.Add(columnname.ToUpper())
-                    added = True
-                Else
-                    i += 1
-                    [next] = "_" & i.ToString()
-                End If
-            End While
-        Next
-
-        Dim AllData As String = s.ReadToEnd()
-        Dim rows As String() = AllData.Split(vbLf.ToCharArray())
-
-        For Each r As String In rows
-            Dim items As String() = r.Split(delimiter.ToCharArray())
-            ds.Tables(TableName).Rows.Add(items)
-        Next
-
-        s.Close()
-        dt = ds.Tables(0)
-        dt.PrimaryKey = New DataColumn() {dt.Columns(0)} '設定主KEY,供SELECT用
-        Return dt
-    End Function
 
     ''' <summary>
     ''' 產TXT
@@ -106,12 +86,16 @@ Public Class Form1
             fileStream.Close()
 
             Dim sw As StreamWriter = New StreamWriter(savepos)
-            sw.WriteLine(RichTextBox1.Text)
-            sw.Close()
+
+            Try
+                sw.WriteLine(RichTextBox1.Text)
+            Finally
+                sw.Close()
+            End Try
         End If
     End Sub
 
-    Sub MAIL(m_subject As String, m_reciver As String, m_body As String)
+    Private Sub MAIL(m_subject As String, m_reciver As String, m_body As String)
         'REF: https://support.microsoft.com/zh-tw/help/287573/how-to-use-command-line-switches-to-create-a-pre-addressed-e-mail-mess
         '這裏我們查找系統的缺省郵件客戶程序，其他的客戶程序我沒有試驗過，不知道這種方式是否可行 
         Dim rKey As Microsoft.Win32.RegistryKey = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey("mailto\shell\open\command")
@@ -132,36 +116,15 @@ Public Class Form1
         End If
     End Sub
 
-    Function replaceMail(Input As String) As String
-        Input = Input.Replace(vbLf, "")
-
-        Input = Input.Replace("{需求單}", txt需求單.Text)
-        Input = Input.Replace("{換版單}", txt換版單.Text)
-        Input = Input.Replace("{換版日}", dt換版日.Text)
-        Input = Input.Replace("{TFS_SN}", txtTSF_SN.Text)
-        Input = Input.Replace("{專案}", cmbPROJ.SelectedItem)
-
-        Dim str As String = ""
-
-        str = cmbSASD.SelectedItem.ToString
-        Input = Input.Replace("{AP2}", str.Substring(str.Length - 2, 2)) '名字取最後兩個字
-
-        str = cmbOK.SelectedItem.ToString
-        Input = Input.Replace("{核准}", str.Substring(str.Length - 2, 2))
-
-        str = cmbUSER.SelectedItem.ToString
-        Input = Input.Replace("{USER}", str.Substring(str.Length - 2, 2))
-
-        Return Input
-    End Function
-
     Private Sub CmbPROJ_SelectedIndexChanged(sender As System.Object, e As System.EventArgs) Handles cmbPROJ.SelectedIndexChanged
         Dim sel_itm As String = cmbPROJ.SelectedItem.ToString
         txt需求單.Text = ""
         txt換版單.Text = ""
+
         cmbSASD.Items.Clear()
         cmbOK.Items.Clear()
         cmbUSER.Items.Clear()
+
         dt換版日.Text = ""
         txtTSF_SN.Text = ""
 
@@ -216,6 +179,7 @@ Public Class Form1
 
         Dim savepos As String = ""
         If dialog.ShowDialog() = DialogResult.OK Then
+
             savepos = dialog.FileName
 
             '產生檔案
@@ -223,18 +187,19 @@ Public Class Form1
             fileStream.Close()
 
             Dim sw As StreamWriter = New StreamWriter(savepos)
-            'sw.WriteLine(RichTextBox1.Text)
-
-            sw.WriteLine(cmbPROJ.SelectedItem.ToString) '1專案
-            sw.WriteLine(txt需求單.Text) '2需求單
-            sw.WriteLine(txt換版單.Text) '3換版單
-            sw.WriteLine(IIf(cmbSASD.SelectedItem Is Nothing, "", cmbSASD.SelectedItem.ToString)) '4AP2
-            sw.WriteLine(IIf(cmbOK.SelectedItem Is Nothing, "", cmbOK.SelectedItem.ToString)) '5核准
-            sw.WriteLine(IIf(cmbUSER.SelectedItem Is Nothing, "", cmbUSER.SelectedItem.ToString)) '6USER
-            sw.WriteLine(dt換版日.Text) '7換版日
-            sw.WriteLine(txtTSF_SN.Text) '8TFS_SN
-
-            sw.Close()
+            Try
+                'sw.WriteLine(RichTextBox1.Text)
+                sw.WriteLine(cmbPROJ.SelectedItem.ToString) '1專案
+                sw.WriteLine(txt需求單.Text) '2需求單
+                sw.WriteLine(txt換版單.Text) '3換版單
+                sw.WriteLine(If(cmbSASD.SelectedItem Is Nothing, "", cmbSASD.SelectedText.ToString())) '4AP2
+                sw.WriteLine(If(cmbOK.SelectedItem Is Nothing, "", cmbOK.SelectedItem.ToString())) '5核准
+                sw.WriteLine(If(cmbUSER.SelectedItem Is Nothing, "", cmbUSER.SelectedItem.ToString())) '6USER
+                sw.WriteLine(dt換版日.Text) '7換版日
+                sw.WriteLine(txtTSF_SN.Text) '8TFS_SN
+            Finally
+                sw.Close()
+            End Try
         End If
     End Sub
 
@@ -423,6 +388,92 @@ Public Class Form1
         MessageBox.Show("寫入完成!!")
     End Sub
 
+    ''' <summary>
+    ''' reload
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub Button4_Click_1(sender As Object, e As EventArgs) Handles Button4.Click
+        ini()
+    End Sub
+
+#Region "FUN"
+    ''' <summary>
+    ''' txt轉DT
+    ''' </summary>
+    ''' <param name="File"></param>
+    ''' <param name="TableName"></param>
+    ''' <param name="delimiter"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function TxtConvertToDataTable(ByVal File As String, ByVal TableName As String, ByVal delimiter As String) As DataTable
+        Dim dt As DataTable = New DataTable()
+        Dim ds As DataSet = New DataSet()
+        Dim s As StreamReader = New StreamReader(File, System.Text.Encoding.[Default])
+        Dim columns As String() = s.ReadLine().Split(delimiter.ToCharArray())
+        ds.Tables.Add(TableName)
+
+        For Each col As String In columns
+            Dim added As Boolean = False
+            Dim [next] As String = ""
+            Dim i As Integer = 0
+
+            While Not added
+                Dim columnname As String = col & [next]
+                columnname = columnname.Replace("#", "")
+                columnname = columnname.Replace("'", "")
+                columnname = columnname.Replace("&", "")
+
+                If Not ds.Tables(TableName).Columns.Contains(columnname) Then
+                    ds.Tables(TableName).Columns.Add(columnname.ToUpper())
+                    added = True
+                Else
+                    i += 1
+                    [next] = "_" & i.ToString()
+                End If
+            End While
+        Next
+
+        Dim AllData As String = s.ReadToEnd()
+        Dim rows As String() = AllData.Split(vbLf.ToCharArray())
+
+        For Each r As String In rows
+            Dim items As String() = r.Split(delimiter.ToCharArray())
+            ds.Tables(TableName).Rows.Add(items)
+        Next
+
+        s.Close()
+        dt = ds.Tables(0)
+        dt.PrimaryKey = New DataColumn() {dt.Columns(0)} '設定主KEY,供SELECT用
+        Return dt
+    End Function
+
+    Function replaceMail(Input As String) As String
+        Input = Input.Replace(vbLf, "")
+
+        Input = Input.Replace("{需求單}", txt需求單.Text)
+        Input = Input.Replace("{換版單}", txt換版單.Text)
+        Input = Input.Replace("{換版日}", dt換版日.Text)
+        Input = Input.Replace("{TFS_SN}", txtTSF_SN.Text)
+        Input = Input.Replace("{專案}", cmbPROJ.SelectedItem)
+
+        Dim str As String = ""
+
+        str = cmbSASD.SelectedItem.ToString
+        Input = Input.Replace("{AP2}", str.Substring(str.Length - 2, 2)) '名字取最後兩個字
+
+        str = cmbOK.SelectedItem.ToString
+        Input = Input.Replace("{核准}", str.Substring(str.Length - 2, 2))
+
+        str = cmbUSER.SelectedItem.ToString
+        Input = Input.Replace("{USER}", str.Substring(str.Length - 2, 2))
+
+        Return Input
+    End Function
+#End Region
+
+
     'Private Sub Button2_Click(sender As System.Object, e As System.EventArgs) Handles Button2.Click
     '    Dim m_subject As String = "TFS換版:" & txt需求單.Text & "/" & txt換版單.Text
     '    Dim m_reciver As String = ""
@@ -489,4 +540,13 @@ Public Class Form1
 
     'End Sub
 
+    ''' <summary>
+    ''' 開啟TXT檔編輯
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub Label3_Click(sender As Object, e As EventArgs) Handles Label3.Click, Label4.Click, Label7.Click
+        Process.Start("notepad", Path + "\group.txt")
+    End Sub
 End Class

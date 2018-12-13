@@ -61,6 +61,7 @@ Partial Class Form1
         Me.txtSE = New System.Windows.Forms.TextBox()
         Me.txtPRJ = New System.Windows.Forms.TextBox()
         Me.ComboBox1 = New System.Windows.Forms.ComboBox()
+        Me.Button4 = New System.Windows.Forms.Button()
         Me.GroupBox1.SuspendLayout()
         Me.GroupBox2.SuspendLayout()
         Me.GroupBox3.SuspendLayout()
@@ -409,7 +410,7 @@ Partial Class Form1
         Me.Button6.Location = New System.Drawing.Point(11, 512)
         Me.Button6.Margin = New System.Windows.Forms.Padding(2)
         Me.Button6.Name = "Button6"
-        Me.Button6.Size = New System.Drawing.Size(169, 33)
+        Me.Button6.Size = New System.Drawing.Size(92, 33)
         Me.Button6.TabIndex = 37
         Me.Button6.Text = "產生MAIL"
         Me.Button6.UseVisualStyleBackColor = True
@@ -456,11 +457,23 @@ Partial Class Form1
         Me.ComboBox1.Size = New System.Drawing.Size(168, 20)
         Me.ComboBox1.TabIndex = 41
         '
+        'Button4
+        '
+        Me.Button4.Font = New System.Drawing.Font("新細明體", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(136, Byte))
+        Me.Button4.Location = New System.Drawing.Point(119, 512)
+        Me.Button4.Margin = New System.Windows.Forms.Padding(2)
+        Me.Button4.Name = "Button4"
+        Me.Button4.Size = New System.Drawing.Size(61, 33)
+        Me.Button4.TabIndex = 42
+        Me.Button4.Text = "reload"
+        Me.Button4.UseVisualStyleBackColor = True
+        '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 12.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1110, 556)
+        Me.Controls.Add(Me.Button4)
         Me.Controls.Add(Me.ComboBox1)
         Me.Controls.Add(Me.txtPRJ)
         Me.Controls.Add(Me.txtSE)
@@ -540,5 +553,6 @@ Partial Class Form1
     Friend WithEvents txtSE As System.Windows.Forms.TextBox
     Friend WithEvents txtPRJ As System.Windows.Forms.TextBox
     Friend WithEvents ComboBox1 As System.Windows.Forms.ComboBox
+    Friend WithEvents Button4 As System.Windows.Forms.Button
 
 End Class
